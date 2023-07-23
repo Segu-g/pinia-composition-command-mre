@@ -1,4 +1,4 @@
-module.exports ={
+module.exports = {
   env: {
     browser: true,
     es6: true,
@@ -30,6 +30,5 @@ module.exports ={
     sourceType: 'module',
   },
   plugins: ['@typescript-eslint', 'vue'],
-  rules: {
-  },
+  rules: {},
 };

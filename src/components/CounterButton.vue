@@ -7,8 +7,6 @@ const countUp = () => counterCommand.increment();
 
 <template>
   <div class="card">
-    <button type="button" @click="countUp">
-      count is {{ store.counter }}
-    </button>
+    <button type="button" @click="countUp">count is {{ store.counter }}</button>
   </div>
 </template>
