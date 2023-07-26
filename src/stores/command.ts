@@ -7,7 +7,6 @@ import {
   createDraft,
   finishDraft,
   Patch,
-  Draft,
 } from 'immer';
 import { applyPatch, Operation } from 'rfc6902';
 
@@ -70,7 +69,7 @@ type StoreState<Store extends StoreGeneric> = Parameters<
   Parameters<Store['$patch']>[0]
 >[0];
 type MutationArgStates<Stores extends Record<string, StoreGeneric>> = {
-  [K in keyof Stores]: Draft<StoreState<Stores[K]>>;
+  [K in keyof Stores]: StoreState<Stores[K]>;
 };
 
 function updateStore(store: StoreGeneric, patches: Patch[]) {
