@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import {
   enablePatches,
   enableMapSet,
+  setAutoFreeze,
   createDraft,
   finishDraft,
   Patch,
@@ -15,6 +16,7 @@ import { useText } from './textStore';
 
 enablePatches();
 enableMapSet();
+setAutoFreeze(false);
 
 type CommandPatches = Record<
   string,

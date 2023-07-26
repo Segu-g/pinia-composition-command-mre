@@ -2,11 +2,12 @@
 import { useText, useTextCommand } from '@/stores/textStore';
 const store = useText();
 const textCommand = useTextCommand();
-const onChange = (evt: InputEvent) => textCommand.changeText(evt.data ?? '');
+const onChange = (evt: Event) => (evt.target instanceof HTMLInputElement) && textCommand.changeText(evt.target?.value ?? '');
 </script>
 
 <template>
   <div class="card">
-    <input :value="store.text" @input="onChange as unknown" />
+    <p>{{ store.text }}</p>
+    <input :value="store.text" @input="onChange" />
   </div>
 </template>

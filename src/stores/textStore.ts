@@ -12,8 +12,11 @@ export const useText = defineStore('text', () => {
 
 export const useTextCommand = defineStore('textCommand', () => {
   const textStore = useText();
-  const changeText = defineCommand({ textStore }, ({ textStore }, text) => {
-    textStore.text += text;
-  });
+  const changeText = defineCommand(
+    { textStore },
+    ({ textStore }, text: string) => {
+      textStore.text = text;
+    },
+  );
   return { changeText };
 });
