@@ -47,10 +47,10 @@ export const defineCommand = <
   Stores extends Record<string, StoreGeneric>,
   Payloads extends unknown[],
 >(
+  commandStore: { $pushCommand(command: CommandPatches): void },
   stores: Stores,
   mutation: (state: MutationArgStates<Stores>, ...payloads: Payloads) => void,
 ) => {
-  const command = useCommand();
   return (...payloads: Payloads) => {
     // Record operations
     const stateDrafts = Object.fromEntries(
@@ -78,7 +78,7 @@ export const defineCommand = <
       const { patches } = commandPatches[stores[key].$id];
       updateStore(stores[key], patches);
     }
-    command.pushCommand(commandPatches);
+    commandStore.$pushCommand(commandPatches);
   };
 };
 
@@ -111,13 +111,13 @@ export const useCommand = defineStore('command', () => {
     stackedPatchesHistory.value.push(command);
   };
 
-  const pushCommand = (command: CommandPatches) => {
+  const $pushCommand = (command: CommandPatches) => {
     popedPatchesHistory.value = [];
     stackedPatchesHistory.value.push(command);
   };
 
   return {
-    pushCommand,
+    $pushCommand,
     redo,
     undo,
   };

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
-import { defineCommand } from './command';
+import { defineCommand, useCommand } from './command';
 
 export const useText = defineStore('text', () => {
   const text = ref('');
@@ -12,7 +12,9 @@ export const useText = defineStore('text', () => {
 
 export const useTextCommand = defineStore('textCommand', () => {
   const textStore = useText();
+  const commandStore = useCommand();
   const changeText = defineCommand(
+    commandStore,
     { textStore },
     ({ textStore }, text: string) => {
       textStore.text = text;
