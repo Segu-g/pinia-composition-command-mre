@@ -18,10 +18,10 @@ enablePatches();
 enableMapSet();
 setAutoFreeze(false);
 
-const useStoreArr = [useCounter, useText];
+const getUseStoreArr = () => [useCounter, useText];
 
 export const useCommand = defineStore('command', () => {
-  const allStores = useStoreArr.map((useStore) => useStore());
+  const allStores = getUseStoreArr().map((useStore) => useStore());
   const storeIdMap = Object.fromEntries(
     allStores.map((store) => [store.$id, store]),
   );
@@ -84,7 +84,10 @@ function updateStore(store: StoreGeneric, patches: Patch[]) {
 }
 
 export const defineCommand = <
-  Stores extends Record<string, ReturnType<(typeof useStoreArr)[number]>>,
+  Stores extends Record<
+    string,
+    ReturnType<ReturnType<typeof getUseStoreArr>[number]>
+  >,
   Payloads extends unknown[],
 >(
   commandStore: { $pushCommand(command: CommandPatches): void },
