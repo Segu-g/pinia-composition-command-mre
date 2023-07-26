@@ -18,6 +18,46 @@ enablePatches();
 enableMapSet();
 setAutoFreeze(false);
 
+const useStoreArr = [useCounter, useText];
+
+export const useCommand = defineStore('command', () => {
+  const allStores = useStoreArr.map((useStore) => useStore());
+  const storeIdMap = Object.fromEntries(
+    allStores.map((store) => [store.$id, store]),
+  );
+  const stackedPatchesHistory = ref<CommandPatches[]>([]);
+  const popedPatchesHistory = ref<CommandPatches[]>([]);
+
+  const undo = () => {
+    const command = stackedPatchesHistory.value.pop();
+    if (command === undefined) return;
+    for (const [storeId, { inversePatches }] of Object.entries(command)) {
+      updateStore(storeIdMap[storeId], inversePatches);
+    }
+    popedPatchesHistory.value.push(command);
+  };
+
+  const redo = () => {
+    const command = popedPatchesHistory.value.pop();
+    if (command === undefined) return;
+    for (const [storeId, { patches }] of Object.entries(command)) {
+      updateStore(storeIdMap[storeId], patches);
+    }
+    stackedPatchesHistory.value.push(command);
+  };
+
+  const $pushCommand = (command: CommandPatches) => {
+    popedPatchesHistory.value = [];
+    stackedPatchesHistory.value.push(command);
+  };
+
+  return {
+    $pushCommand,
+    redo,
+    undo,
+  };
+});
+
 type CommandPatches = Record<
   string,
   {
@@ -44,7 +84,7 @@ function updateStore(store: StoreGeneric, patches: Patch[]) {
 }
 
 export const defineCommand = <
-  Stores extends Record<string, StoreGeneric>,
+  Stores extends Record<string, ReturnType<(typeof useStoreArr)[number]>>,
   Payloads extends unknown[],
 >(
   commandStore: { $pushCommand(command: CommandPatches): void },
@@ -81,44 +121,3 @@ export const defineCommand = <
     commandStore.$pushCommand(commandPatches);
   };
 };
-
-export const useCommand = defineStore('command', () => {
-  const counter = useCounter();
-  const text = useText();
-
-  const allStores = [counter, text];
-  const storeIdMap = Object.fromEntries(
-    allStores.map((store) => [store.$id, store]),
-  );
-  const stackedPatchesHistory = ref<CommandPatches[]>([]);
-  const popedPatchesHistory = ref<CommandPatches[]>([]);
-
-  const undo = () => {
-    const command = stackedPatchesHistory.value.pop();
-    if (command === undefined) return;
-    for (const [storeId, { inversePatches }] of Object.entries(command)) {
-      updateStore(storeIdMap[storeId], inversePatches);
-    }
-    popedPatchesHistory.value.push(command);
-  };
-
-  const redo = () => {
-    const command = popedPatchesHistory.value.pop();
-    if (command === undefined) return;
-    for (const [storeId, { patches }] of Object.entries(command)) {
-      updateStore(storeIdMap[storeId], patches);
-    }
-    stackedPatchesHistory.value.push(command);
-  };
-
-  const $pushCommand = (command: CommandPatches) => {
-    popedPatchesHistory.value = [];
-    stackedPatchesHistory.value.push(command);
-  };
-
-  return {
-    $pushCommand,
-    redo,
-    undo,
-  };
-});
