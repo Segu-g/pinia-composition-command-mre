@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { useText, useTextCommand } from '@/stores/textStore';
+import { useTextCommand } from '@/stores/textStore';
+import { useText } from '@/stores';
 const store = useText();
 const textCommand = useTextCommand();
 const onChange = (evt: Event) => (evt.target instanceof HTMLInputElement) && textCommand.changeText(evt.target?.value ?? '');

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { useCounter, useCounterCommand } from '@/stores/countStore';
+import { useCounterCommand } from '@/stores/countStore';
+import { useCounter } from '@/stores';
 const store = useCounter();
 const counterCommand = useCounterCommand();
 const countUp = () => counterCommand.increment();
