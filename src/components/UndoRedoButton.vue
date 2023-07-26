@@ -5,7 +5,7 @@ const command = useCommand();
 
 <template>
   <div>
-    <button type="button" @click="command.undo">UNDO</button>
-    <button type="button" @click="command.redo">REDO</button>
+    <button type="button" :disabled="!command.undoable" @click="command.undo">UNDO</button>
+    <button type="button" :disabled="!command.redoable" @click="command.redo">REDO</button>
   </div>
 </template>

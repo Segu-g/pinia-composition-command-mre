@@ -1,5 +1,5 @@
 import { defineStore, StoreGeneric } from 'pinia';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import {
   enablePatches,
   enableMapSet,
@@ -27,6 +27,9 @@ export const useCommand = defineStore('command', () => {
   const stackedPatchesHistory = ref<CommandPatches[]>([]);
   const popedPatchesHistory = ref<CommandPatches[]>([]);
 
+  const undoable = computed(() => stackedPatchesHistory.value.length !== 0);
+  const redoable = computed(() => popedPatchesHistory.value.length !== 0);
+
   const undo = () => {
     const command = stackedPatchesHistory.value.pop();
     if (command === undefined) return;
@@ -52,8 +55,10 @@ export const useCommand = defineStore('command', () => {
 
   return {
     $pushCommand,
-    redo,
+    undoable,
+    redoable,
     undo,
+    redo,
   };
 });
 
