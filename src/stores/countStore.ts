@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
-import { defineCommand, useCommand } from './command';
+import { useCommandContext } from './command';
 import { toReadonlyStoreDefinition } from './storeHelper';
 
 export const _useCounter = defineStore('counter', () => {
@@ -16,9 +16,9 @@ export const _useCounter = defineStore('counter', () => {
 export const useCounter = toReadonlyStoreDefinition(_useCounter);
 
 export const useCounterCommand = defineStore('counterCommand', () => {
+  const { defineCommand } = useCommandContext();
   const counter = _useCounter();
-  const commandStore = useCommand();
-  const increment = defineCommand(commandStore, { counter }, ({ counter }) => {
+  const increment = defineCommand({ counter }, ({ counter }) => {
     counter.counter += 1;
   });
   return { increment };

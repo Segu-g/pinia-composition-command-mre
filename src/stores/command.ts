@@ -87,7 +87,7 @@ function updateStore(store: StoreGeneric, patches: Patch[]) {
   });
 }
 
-export const defineCommand = <
+export const _defineCommand = <
   Stores extends Record<
     string,
     ReturnType<ReturnType<typeof getUseStoreArr>[number]>
@@ -126,5 +126,25 @@ export const defineCommand = <
       updateStore(stores[key], patches);
     }
     commandStore.$pushCommand(commandPatches);
+  };
+};
+
+export const useCommandContext = () => {
+  const command = useCommand();
+  return {
+    commnadStore: command,
+    defineCommand: <
+      Stores extends Record<
+        string,
+        ReturnType<ReturnType<typeof getUseStoreArr>[number]>
+      >,
+      Payloads extends unknown[],
+    >(
+      stores: Stores,
+      mutation: (
+        state: MutationArgStates<Stores>,
+        ...payloads: Payloads
+      ) => void,
+    ) => _defineCommand<Stores, Payloads>(command, stores, mutation),
   };
 };
