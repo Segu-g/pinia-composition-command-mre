@@ -10,14 +10,14 @@ import {
 } from 'immer';
 import { applyPatch, Operation } from 'rfc6902';
 
-import { _useCounter } from './countStore';
-import { _useText } from './textStore';
+import { useCountState } from './countStore';
+import { useTextState } from './textStore';
 
 enablePatches();
 enableMapSet();
 setAutoFreeze(false);
 
-const getUseStoreArr = () => [_useCounter, _useText];
+const getUseStoreArr = () => [useCountState, useTextState];
 
 export const useCommand = defineStore('command', () => {
   const allStores = getUseStoreArr().map((useStore) => useStore());

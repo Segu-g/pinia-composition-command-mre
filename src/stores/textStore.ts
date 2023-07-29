@@ -1,26 +1,26 @@
-import { defineStore } from 'pinia';
+import { defineStore, storeToRefs } from 'pinia';
 import { ref } from 'vue';
 
 import { useCommandContext } from './command';
 import { toReadonlyStoreDefinition } from './storeHelper';
 
-export const _useText = defineStore('text', () => {
+export const useTextState = defineStore('text/state', () => {
   const text = ref('');
   return {
     text,
   };
 });
 
-export const useText = toReadonlyStoreDefinition(_useText);
-
-export const useTextCommand = defineStore('textCommand', () => {
-  const textStore = _useText();
+const _useText = defineStore('text', () => {
+  const state = useTextState();
   const { defineCommand } = useCommandContext();
-  const changeText = defineCommand(
-    { textStore },
-    ({ textStore }, text: string) => {
-      textStore.text = text;
+  const commandChangeText = defineCommand(
+    { state },
+    ({ state }, text: string) => {
+      state.text = text;
     },
   );
-  return { changeText };
+  return { ...storeToRefs(state), commandChangeText };
 });
+
+export const useText = toReadonlyStoreDefinition(_useText);
