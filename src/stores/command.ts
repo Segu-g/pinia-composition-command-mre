@@ -17,10 +17,10 @@ enablePatches();
 enableMapSet();
 setAutoFreeze(false);
 
-const getUseStoreArr = () => [useCountState, useTextState];
+const useStoreArr = [useCountState, useTextState];
 
 export const useCommand = defineStore('command', () => {
-  const allStores = getUseStoreArr().map((useStore) => useStore());
+  const allStores = useStoreArr.map((useStore) => useStore());
   const storeIdMap = Object.fromEntries(
     allStores.map((store) => [store.$id, store]),
   );
@@ -33,8 +33,8 @@ export const useCommand = defineStore('command', () => {
   const undo = () => {
     const command = stackedPatchesHistory.value.pop();
     if (command === undefined) return;
-    for (const [storeId, { inversePatches }] of Object.entries(command)) {
-      updateStore(storeIdMap[storeId], inversePatches);
+    for (const [storeId, { undoPatches }] of Object.entries(command)) {
+      updateStore(storeIdMap[storeId], undoPatches);
     }
     popedPatchesHistory.value.push(command);
   };
@@ -42,8 +42,8 @@ export const useCommand = defineStore('command', () => {
   const redo = () => {
     const command = popedPatchesHistory.value.pop();
     if (command === undefined) return;
-    for (const [storeId, { patches }] of Object.entries(command)) {
-      updateStore(storeIdMap[storeId], patches);
+    for (const [storeId, { doPatches }] of Object.entries(command)) {
+      updateStore(storeIdMap[storeId], doPatches);
     }
     stackedPatchesHistory.value.push(command);
   };
@@ -65,8 +65,8 @@ export const useCommand = defineStore('command', () => {
 type CommandPatches = Record<
   string,
   {
-    patches: Patch[];
-    inversePatches: Patch[];
+    doPatches: Patch[];
+    undoPatches: Patch[];
   }
 >;
 
@@ -88,10 +88,7 @@ function updateStore(store: StoreGeneric, patches: Patch[]) {
 }
 
 export const _defineCommand = <
-  Stores extends Record<
-    string,
-    ReturnType<ReturnType<typeof getUseStoreArr>[number]>
-  >,
+  Stores extends Record<string, ReturnType<(typeof useStoreArr)[number]>>,
   Payloads extends unknown[],
 >(
   commandStore: { $pushCommand(command: CommandPatches): void },
@@ -110,20 +107,20 @@ export const _defineCommand = <
     const commandPatches: CommandPatches = Object.fromEntries(
       Object.entries(stores).map(([, store]) => [
         store.$id,
-        { patches: [], inversePatches: [] },
+        { doPatches: [], undoPatches: [] },
       ]),
     );
     for (const key in stores) {
       finishDraft(stateDrafts[key], (patch, inversePatch) => {
         const target = commandPatches[stores[key].$id];
-        target.patches = [...target.patches, ...patch];
-        target.inversePatches = [...inversePatch, ...target.inversePatches];
+        target.doPatches = [...target.doPatches, ...patch];
+        target.undoPatches = [...inversePatch, ...target.undoPatches];
       });
     }
     // apply patches
     for (const key in stores) {
-      const { patches } = commandPatches[stores[key].$id];
-      updateStore(stores[key], patches);
+      const { doPatches } = commandPatches[stores[key].$id];
+      updateStore(stores[key], doPatches);
     }
     commandStore.$pushCommand(commandPatches);
   };
@@ -134,10 +131,7 @@ export const useCommandContext = () => {
   return {
     commnadStore: command,
     defineCommand: <
-      Stores extends Record<
-        string,
-        ReturnType<ReturnType<typeof getUseStoreArr>[number]>
-      >,
+      Stores extends Record<string, ReturnType<(typeof useStoreArr)[number]>>,
       Payloads extends unknown[],
     >(
       stores: Stores,
