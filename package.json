@@ -10,7 +10,7 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "immer": "^10.0.2",
+    "immer": "^10.0.3",
     "pinia": "^2.1.4",
     "rfc6902": "^5.0.1",
     "vue": "^3.3.4",

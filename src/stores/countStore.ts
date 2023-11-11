@@ -1,30 +1,26 @@
 import { defineStore, storeToRefs } from 'pinia';
-import { ref } from 'vue';
-
-import { useCommandContext } from './command';
-import { toReadonlyStoreDefinition } from './storeHelper';
+import { defineCommandableState } from './pinia_helper';
 import { useStore } from '@/vuex-store';
 
-export const useCountState = defineStore('count/state', () => {
-  const counter = ref(0);
-  return {
-    counter,
-  };
+export const CountState = defineCommandableState({
+  id: 'count/state',
+  state: () => ({
+    counter: 0,
+  }),
 });
 
-const _useCount = defineStore('count', () => {
+export const useCount = defineStore('count', () => {
   const vuexStore = useStore();
-
-  const { defineCommand } = useCommandContext();
-  const state = useCountState();
-  const commandIncrement = defineCommand({ state }, ({ state }) => {
+  const { state, defMut, asCmd } = CountState.useContext();
+  const commandIncrement = defMut((state) => {
     state.counter += 1;
   });
   const countUpWithVuex = () => {
-    state.counter += 1;
     vuexStore.commit('increment');
   };
-  return { ...storeToRefs(state), commandIncrement, countUpWithVuex };
+  return {
+    ...storeToRefs(state),
+    commandIncrement: asCmd(commandIncrement),
+    countUpWithVuex,
+  };
 });
-
-export const useCount = toReadonlyStoreDefinition(_useCount);
