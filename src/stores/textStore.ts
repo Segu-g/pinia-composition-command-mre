@@ -10,12 +10,14 @@ export const TextState = defineCommandableState({
 });
 
 export const useText = defineStore('text', () => {
-  const { state, defMut, asCmd } = TextState.useContext();
-  const commandChangeText = defMut((state, text: string) => {
+  const { state, defGet, defMut, asCmd, getRef } = TextState.useContext();
+  const changeTextMut = defMut((state, text: string) => {
     state.text = text;
   });
+  const textGet = defGet((state) => state.text);
   return {
     state: storeToRefs(state),
-    commandChangeText: asCmd(commandChangeText),
+    commandChangeText: asCmd(changeTextMut),
+    text: getRef(textGet),
   };
 });
