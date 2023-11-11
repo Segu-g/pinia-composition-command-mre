@@ -14,5 +14,8 @@ export const useText = defineStore('text', () => {
   const commandChangeText = defMut((state, text: string) => {
     state.text = text;
   });
-  return { ...storeToRefs(state), commandChangeText: asCmd(commandChangeText) };
+  return {
+    state: storeToRefs(state),
+    commandChangeText: asCmd(commandChangeText),
+  };
 });

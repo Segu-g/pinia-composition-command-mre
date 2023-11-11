@@ -7,8 +7,11 @@ const piniaCount = useCount();
 
 <template>
   <div class="card">
-    <button type="button" @click="store.commit('increment')">vuex count is {{ store.state.count }}</button>
-    <button type="button" @click="piniaCount.countUpWithVuex()">count up with pinia</button>
-</div>
-  
+    <button type="button" @click="store.commit('increment')">
+      vuex count is {{ store.state.count }}
+    </button>
+    <button type="button" @click="piniaCount.countUpWithVuex()">
+      count up with pinia
+    </button>
+  </div>
 </template>

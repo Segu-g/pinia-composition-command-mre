@@ -19,7 +19,7 @@ export const useCount = defineStore('count', () => {
     vuexStore.commit('increment');
   };
   return {
-    ...storeToRefs(state),
+    state: storeToRefs(state),
     commandIncrement: asCmd(commandIncrement),
     countUpWithVuex,
   };
