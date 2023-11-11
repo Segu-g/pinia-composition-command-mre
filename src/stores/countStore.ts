@@ -1,5 +1,5 @@
 import { defineStore, storeToRefs } from 'pinia';
-import { defineCommandableState } from './pinia_helper';
+import { defineCommandableState } from './command';
 import { useStore } from '@/vuex-store';
 
 export const CountState = defineCommandableState({

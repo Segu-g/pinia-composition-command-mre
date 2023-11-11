@@ -1,6 +1,6 @@
 import { defineStore, storeToRefs } from 'pinia';
 
-import { defineCommandableState } from './pinia_helper';
+import { defineCommandableState } from './command';
 
 export const TextState = defineCommandableState({
   id: 'text/state',
