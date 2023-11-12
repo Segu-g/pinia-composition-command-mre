@@ -8,7 +8,7 @@ const onChange = (evt: Event) =>
 
 <template>
   <div class="card">
-    <p>{{ store.text }}</p>
-    <input :value="store.text" @input="onChange" />
+    <p>{{ store.textGet.get }}</p>
+    <input :value="store.textGet.get" @input="onChange" />
   </div>
 </template>

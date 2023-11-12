@@ -33,11 +33,13 @@ export class StateController<Id extends string, S extends StateTree> {
     return this._useStore(...params);
   }
 
-  public defGet<Ret>(getter: GetterDefinition<S, Ret>) {
+  // Getterを定義するための型ヘルパー
+  public defGetRaw<Ret>(getter: GetterDefinition<S, Ret>) {
     return getter;
   }
 
-  public defMut<Payloads extends unknown[]>(
+  // Mutationを定義するための型ヘルパー
+  public defMutRaw<Payloads extends unknown[]>(
     mutation: MutationDefinition<S, Payloads>,
   ) {
     return mutation;
@@ -46,8 +48,14 @@ export class StateController<Id extends string, S extends StateTree> {
   public useContext() {
     const state = this.useState();
     const _writableState = state as Store<Id, S>;
+
     const get = <Ret>(getter: GetterDefinition<S, Ret>): Ret => {
       return getter(state);
+    };
+    const defGet = <Ret>(getter: GetterDefinition<S, Ret>): Getter<S, Ret> => {
+      const getterObj = getter as Getter<S, Ret>;
+      getterObj.get = computed(() => get(getter));
+      return getterObj;
     };
     const getRef = <Ret>(
       getter: GetterDefinition<S, Ret>,
@@ -59,23 +67,28 @@ export class StateController<Id extends string, S extends StateTree> {
     >(
       getterTree: GetterTree,
     ) => mapGetterRef(state, getterTree);
+
     const asAct =
       <Payloads extends unknown[]>(mutation: MutationDefinition<S, Payloads>) =>
       (...payloads: Payloads) =>
         mutation(state, ...payloads);
+    const defMut = <Payloads extends unknown[]>(
+      mutation: MutationDefinition<S, Payloads>,
+    ) => {
+      const mutationObj = mutation as Mutation<S, Payloads>;
+      mutationObj.commit = asAct(mutation);
+      return mutationObj;
+    };
     const mapAsAct = <
       MutationTree extends Record<string, MutationDefinition<S, unknown[]>>,
     >(
       mutationTree: MutationTree,
     ) => mapAsAction(state, mutationTree);
     return {
-      /**
-       * ssssss
-       */
       state,
       _writableState,
-      defGet: this.defGet,
-      defMut: this.defMut,
+      defGet,
+      defMut,
       get,
       getRef,
       mapGetRef,
@@ -96,10 +109,19 @@ export type StateStore<Id extends string, S extends StateTree> = Store<
   Record<never, never>
 >;
 export type GetterDefinition<S extends StateTree, Ret> = (state: S) => Ret;
+export type Getter<S extends StateTree, Ret> = GetterDefinition<S, Ret> & {
+  get: ComputedRef<Ret>;
+};
 export type MutationDefinition<
   S extends StateTree,
   Payloads extends unknown[],
 > = (state: UnwrapRef<S>, ...payloads: Payloads) => void;
+type Mutation<
+  S extends StateTree,
+  Payloads extends unknown[],
+> = MutationDefinition<S, Payloads> & {
+  commit: (...payloads: Payloads) => void;
+};
 export type MapGetterRef<
   S extends StateTree,
   GetterTree extends Record<string, GetterDefinition<S, unknown>>,
