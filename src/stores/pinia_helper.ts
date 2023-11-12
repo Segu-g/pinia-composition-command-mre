@@ -46,12 +46,17 @@ export class StateController<Id extends string, S extends StateTree> {
   }
 
   public useContext() {
+    // 一般に公開するreadonlyなstate
     const state = this.useState();
+    // 書き込み可能なstate
     const _writableState = state as Store<Id, S>;
 
+    // getterに必要なstateの依存を解決する関数
     const get = <Ret>(getter: GetterDefinition<S, Ret>): Ret => {
       return getter(state);
     };
+    // getterを定義するための関数
+    // getterに.getプロパティを追加し、computedに追加する
     const defGet = <Ret>(getter: GetterDefinition<S, Ret>): Getter<S, Ret> => {
       const getterObj = getter as Getter<S, Ret>;
       getterObj.get = computed(() => get(getter));
@@ -68,10 +73,16 @@ export class StateController<Id extends string, S extends StateTree> {
       getterTree: GetterTree,
     ) => mapGetterRef(state, getterTree);
 
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    const defAct = <A extends Function>(action: A): Action<A> => {
+      return {
+        dispatch: action,
+      };
+    };
     const asAct =
       <Payloads extends unknown[]>(mutation: MutationDefinition<S, Payloads>) =>
       (...payloads: Payloads) =>
-        mutation(state, ...payloads);
+        mutation(_writableState, ...payloads);
     const defMut = <Payloads extends unknown[]>(
       mutation: MutationDefinition<S, Payloads>,
     ) => {
@@ -89,6 +100,7 @@ export class StateController<Id extends string, S extends StateTree> {
       _writableState,
       defGet,
       defMut,
+      defAct,
       get,
       getRef,
       mapGetRef,
@@ -115,13 +127,18 @@ export type Getter<S extends StateTree, Ret> = GetterDefinition<S, Ret> & {
 export type MutationDefinition<
   S extends StateTree,
   Payloads extends unknown[],
-> = (state: UnwrapRef<S>, ...payloads: Payloads) => void;
+> = (draft: UnwrapRef<S>, ...payloads: Payloads) => void;
 type Mutation<
   S extends StateTree,
   Payloads extends unknown[],
 > = MutationDefinition<S, Payloads> & {
   commit: (...payloads: Payloads) => void;
 };
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type Action<A extends Function> = {
+  dispatch: A;
+};
+
 export type MapGetterRef<
   S extends StateTree,
   GetterTree extends Record<string, GetterDefinition<S, unknown>>,

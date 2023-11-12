@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useCount } from '@/stores';
 const store = useCount();
-const countUp = () => store.commandIncrement();
+const countUp = () => store.commandIncrement.dispatch();
 </script>
 
 <template>

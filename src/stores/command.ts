@@ -14,6 +14,7 @@ import {
   StateStoreDefinition,
   StateStore,
   MutationDefinition,
+  Action,
 } from './pinia_helper';
 
 enablePatches();
@@ -125,7 +126,13 @@ export class CommandableStateController<
     }) => defCommand(commandStore, contexts._writableState, recipe);
     const asCmd = <Payloads extends unknown[]>(
       mutation: MutationDefinition<S, Payloads>,
-    ) => convertAsCommand(commandStore, contexts._writableState, mutation);
+    ): Action<(...payloads: Payloads) => void> => ({
+      dispatch: convertAsCommand(
+        commandStore,
+        contexts._writableState,
+        mutation,
+      ),
+    });
     const mapAsCmd = <
       MutationTree extends Record<string, MutationDefinition<S, unknown[]>>,
     >(
@@ -188,9 +195,12 @@ export const defCommand = <
       ...payloads: APayloads
     ) => Ret;
   },
-) => {
+): Action<(...payloads: APayloads) => Ret> => {
   const commandFunc = convertAsCommand(commandStore, state, recipe.mutation);
-  return (...payloads: APayloads) => recipe.action(commandFunc, ...payloads);
+  return {
+    dispatch: (...payloads: APayloads) =>
+      recipe.action(commandFunc, ...payloads),
+  };
 };
 
 export type MapAsCommand<

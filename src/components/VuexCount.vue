@@ -10,7 +10,7 @@ const piniaCount = useCount();
     <button type="button" @click="store.commit('increment')">
       vuex count is {{ store.state.count }}
     </button>
-    <button type="button" @click="piniaCount.countUpWithVuex()">
+    <button type="button" @click="piniaCount.countUpWithVuex.dispatch()">
       count up with pinia
     </button>
   </div>

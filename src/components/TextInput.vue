@@ -3,7 +3,7 @@ import { useText } from '@/stores';
 const store = useText();
 const onChange = (evt: Event) =>
   evt.target instanceof HTMLInputElement &&
-  store.commandChangeText(evt.target?.value ?? '');
+  store.commandChangeText.dispatch(evt.target?.value ?? '');
 </script>
 
 <template>
