@@ -46,6 +46,9 @@ export class StateController<Id extends string, S extends StateTree> {
   public useContext() {
     const state = this.useState();
     const _writableState = state as Store<Id, S>;
+    const get = <Ret>(getter: GetterDefinition<S, Ret>): Ret => {
+      return getter(state);
+    };
     const getRef = <Ret>(
       getter: GetterDefinition<S, Ret>,
     ): ComputedRef<Ret> => {
@@ -66,10 +69,14 @@ export class StateController<Id extends string, S extends StateTree> {
       mutationTree: MutationTree,
     ) => mapAsAction(state, mutationTree);
     return {
+      /**
+       * ssssss
+       */
       state,
       _writableState,
       defGet: this.defGet,
       defMut: this.defMut,
+      get,
       getRef,
       mapGetRef,
       asAct,

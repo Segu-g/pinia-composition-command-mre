@@ -112,9 +112,20 @@ export class CommandableStateController<
   public useContext() {
     const contexts = super.useContext();
     const commandStore = useCommand();
+    const defCmd = <
+      MPayloads extends unknown[],
+      APayloads extends unknown[],
+      Ret,
+    >(recipe: {
+      mutation: MutationDefinition<S, MPayloads>;
+      action: (
+        mutation: (...payloads: MPayloads) => void,
+        ...payloads: APayloads
+      ) => Ret;
+    }) => defCommand(commandStore, contexts._writableState, recipe);
     const asCmd = <Payloads extends unknown[]>(
       mutation: MutationDefinition<S, Payloads>,
-    ) => _defineCommand(commandStore, contexts._writableState, mutation);
+    ) => convertAsCommand(commandStore, contexts._writableState, mutation);
     const mapAsCmd = <
       MutationTree extends Record<string, MutationDefinition<S, unknown[]>>,
     >(
@@ -122,6 +133,7 @@ export class CommandableStateController<
     ) => mapAsCommand(commandStore, contexts._writableState, mutationTree);
     return {
       ...contexts,
+      defCmd,
       asCmd,
       mapAsCmd,
     };
@@ -134,7 +146,7 @@ function updateStore(store: StoreGeneric, patches: Patch[]) {
   });
 }
 
-export const _defineCommand = <
+const convertAsCommand = <
   Id extends string,
   S extends StateTree,
   Payloads extends unknown[],
@@ -160,6 +172,27 @@ export const _defineCommand = <
   };
 };
 
+export const defCommand = <
+  Id extends string,
+  S extends StateTree,
+  MPayloads extends unknown[],
+  APayloads extends unknown[],
+  Ret,
+>(
+  commandStore: { $pushCommand(command: CommandPatches): void },
+  state: StateStore<Id, S>,
+  recipe: {
+    mutation: MutationDefinition<S, MPayloads>;
+    action: (
+      commit: (...payloads: MPayloads) => void,
+      ...payloads: APayloads
+    ) => Ret;
+  },
+) => {
+  const commandFunc = convertAsCommand(commandStore, state, recipe.mutation);
+  return (...payloads: APayloads) => recipe.action(commandFunc, ...payloads);
+};
+
 export type MapAsCommand<
   S extends StateTree,
   MutationTree extends Record<string, MutationDefinition<S, unknown[]>>,
@@ -183,7 +216,7 @@ export const mapAsCommand = <
   return Object.fromEntries(
     Object.entries(mutationTree).map(([key, mutation]) => [
       key,
-      _defineCommand(commandStore, state, mutation),
+      convertAsCommand(commandStore, state, mutation),
     ]),
   ) as MapAsCommand<S, MutationTree>;
 };
