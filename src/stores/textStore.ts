@@ -12,19 +12,30 @@ export const TextState = defineCommandableState({
 
 export const useText = defineStore('text', () => {
   const { state, defGet, defMut, asCmd } = TextState.useContext();
+
+  // mutation
   const changeTextMut = defMut((state, text: string) => {
     state.text = text;
   });
   const changeNameMut = defMut((state, text: string) => {
     state.name = text;
   });
+  // action
+  const changeTextAndName = (text: string) => {
+    changeNameMut.commit(text);
+    changeNameMut.commit(text);
+  };
+  // command
   const commandChangeText = asCmd(changeTextMut);
+  // getter
   const textGet = defGet((state) => state.text);
   const isTextSameToName = defGet((state) => state.name == textGet(state));
+
   return {
     state: storeToRefs(state),
     changeTextMut,
     changeNameMut,
+    changeTextAndName,
     commandChangeText,
     textGet,
     isTextSameToName,
