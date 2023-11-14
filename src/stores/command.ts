@@ -117,17 +117,18 @@ export class CommandableStateController<
       MPayloads extends unknown[],
       APayloads extends unknown[],
       Ret,
-    >(recipe: {
-      mutation: MutationDefinition<S, MPayloads>;
+    >(
+      mutation: MutationDefinition<S, MPayloads>,
       action: (
         mutation: (...payloads: MPayloads) => void,
         ...payloads: APayloads
-      ) => Ret;
-    }) => defCommand(commandStore, contexts._writableState, recipe);
+      ) => Ret,
+    ) => defCommand(commandStore, contexts._writableState, mutation, action);
     const asCmd = <Payloads extends unknown[]>(
       mutation: MutationDefinition<S, Payloads>,
-    ): Action<(...payloads: Payloads) => void> => ({
-      dispatch: convertAsCommand(
+    ): Command<(...payloads: Payloads) => void> => ({
+      dispatch: contexts.asAct(mutation),
+      command: convertAsCommand(
         commandStore,
         contexts._writableState,
         mutation,
@@ -188,19 +189,26 @@ export const defCommand = <
 >(
   commandStore: { $pushCommand(command: CommandPatches): void },
   state: StateStore<Id, S>,
-  recipe: {
-    mutation: MutationDefinition<S, MPayloads>;
-    action: (
-      commit: (...payloads: MPayloads) => void,
-      ...payloads: APayloads
-    ) => Ret;
-  },
-): Action<(...payloads: APayloads) => Ret> => {
-  const commandFunc = convertAsCommand(commandStore, state, recipe.mutation);
+  mutation: MutationDefinition<S, MPayloads>,
+  action: (
+    commit: (...payloads: MPayloads) => void,
+    ...payloads: APayloads
+  ) => Ret,
+): Command<(...payloads: APayloads) => Ret> => {
+  const commandFunc = convertAsCommand(commandStore, state, mutation);
   return {
     dispatch: (...payloads: APayloads) =>
-      recipe.action(commandFunc, ...payloads),
+      action(
+        (...mpayloads: MPayloads) => mutation(state, ...mpayloads),
+        ...payloads,
+      ),
+    command: (...payloads: APayloads) => action(commandFunc, ...payloads),
   };
+};
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type Command<A extends Function> = Action<A> & {
+  command: A;
 };
 
 export type MapAsCommand<
