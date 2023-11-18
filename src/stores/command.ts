@@ -134,16 +134,11 @@ export class CommandableStateController<
         mutation,
       ),
     });
-    const mapAsCmd = <
-      MutationTree extends Record<string, MutationDefinition<S, unknown[]>>,
-    >(
-      mutationTree: MutationTree,
-    ) => mapAsCommand(commandStore, contexts._writableState, mutationTree);
+
     return {
       ...contexts,
       defCmd,
       asCmd,
-      mapAsCmd,
     };
   }
 }
@@ -209,32 +204,4 @@ export const defCommand = <
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type Command<A extends Function> = Action<A> & {
   command: A;
-};
-
-export type MapAsCommand<
-  S extends StateTree,
-  MutationTree extends Record<string, MutationDefinition<S, unknown[]>>,
-> = {
-  [K in keyof MutationTree]: MutationTree[K] extends MutationDefinition<
-    S,
-    infer Payloads
-  >
-    ? (...payloads: Payloads) => void
-    : never;
-};
-export const mapAsCommand = <
-  Id extends string,
-  S extends StateTree,
-  MutationTree extends Record<string, MutationDefinition<S, unknown[]>>,
->(
-  commandStore: { $pushCommand(command: CommandPatches): void },
-  state: StateStore<Id, S>,
-  mutationTree: MutationTree,
-) => {
-  return Object.fromEntries(
-    Object.entries(mutationTree).map(([key, mutation]) => [
-      key,
-      convertAsCommand(commandStore, state, mutation),
-    ]),
-  ) as MapAsCommand<S, MutationTree>;
 };

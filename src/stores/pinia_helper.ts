@@ -67,11 +67,6 @@ export class StateController<Id extends string, S extends StateTree> {
     ): ComputedRef<Ret> => {
       return computed(() => getter(state));
     };
-    const mapGetRef = <
-      GetterTree extends Record<string, GetterDefinition<S, unknown>>,
-    >(
-      getterTree: GetterTree,
-    ) => mapGetterRef(state, getterTree);
 
     // eslint-disable-next-line @typescript-eslint/ban-types
     const defAct = <A extends Function>(action: A): Action<A> => {
@@ -90,11 +85,7 @@ export class StateController<Id extends string, S extends StateTree> {
       mutationObj.commit = asAct(mutation);
       return mutationObj;
     };
-    const mapAsAct = <
-      MutationTree extends Record<string, MutationDefinition<S, unknown[]>>,
-    >(
-      mutationTree: MutationTree,
-    ) => mapAsAction(state, mutationTree);
+
     return {
       state,
       _writableState,
@@ -103,9 +94,7 @@ export class StateController<Id extends string, S extends StateTree> {
       defAct,
       get,
       getRef,
-      mapGetRef,
       asAct,
-      mapAsAct,
     };
   }
 }
@@ -137,54 +126,4 @@ type Mutation<
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type Action<A extends Function> = {
   dispatch: A;
-};
-
-export type MapGetterRef<
-  S extends StateTree,
-  GetterTree extends Record<string, GetterDefinition<S, unknown>>,
-> = {
-  [K in keyof GetterTree]: GetterTree[K] extends GetterDefinition<S, infer Ret>
-    ? ComputedRef<Ret>
-    : never;
-};
-export const mapGetterRef = <
-  Id extends string,
-  S extends StateTree,
-  GetterTree extends Record<string, GetterDefinition<S, unknown>>,
->(
-  state: StateStore<Id, S>,
-  getterTree: GetterTree,
-) => {
-  return Object.fromEntries(
-    Object.entries(getterTree).map(([key, getter]) => [
-      key,
-      computed(() => getter(state)),
-    ]),
-  ) as MapGetterRef<S, GetterTree>;
-};
-export type MapAsAction<
-  S extends StateTree,
-  MutationTree extends Record<string, MutationDefinition<S, unknown[]>>,
-> = {
-  [K in keyof MutationTree]: MutationTree[K] extends MutationDefinition<
-    S,
-    infer Payloads
-  >
-    ? (...payloads: Payloads) => void
-    : never;
-};
-export const mapAsAction = <
-  Id extends string,
-  S extends StateTree,
-  MutationTree extends Record<string, MutationDefinition<S, unknown[]>>,
->(
-  store: StateStore<Id, S>,
-  mutationTree: MutationTree,
-) => {
-  return Object.fromEntries(
-    Object.entries(mutationTree).map(([key, mutation]) => [
-      key,
-      (...payloads: unknown[]) => mutation(store, payloads),
-    ]),
-  ) as MapAsAction<S, MutationTree>;
 };
