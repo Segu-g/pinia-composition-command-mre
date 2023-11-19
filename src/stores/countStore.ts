@@ -11,17 +11,23 @@ export const CountState = defineCommandableState({
 
 export const useCount = defineStore('count', () => {
   const vuexStore = useStore();
-  const { state, defMut, defAct, asCmd } = CountState.useContext();
+  const { state, defGet, defMut, defAct, asCmd } = CountState.useContext();
   const increment = defMut((state) => {
     state.counter += 1;
   });
+  const getCount = defGet((state) => {
+    // increment(state); // error
+    return state.counter;
+  });
   const commandIncrement = asCmd(increment);
   const countUpWithVuex = defAct(() => {
+    // increment(state) // error
     commandIncrement.dispatch();
     vuexStore.commit('increment');
   });
   return {
     state: storeToRefs(state),
+    getCount,
     commandIncrement,
     countUpWithVuex,
   };

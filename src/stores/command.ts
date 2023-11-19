@@ -15,6 +15,7 @@ import {
   StateStore,
   MutationDefinition,
   Action,
+  Writable,
 } from './pinia_helper';
 
 enablePatches();
@@ -162,7 +163,7 @@ const convertAsCommand = <
     // Record operations
     const [, doPatches, undoPatches] = immer.produceWithPatches(
       store.$state,
-      (draft) => mutation(draft as UnwrapRef<S>, ...payloads),
+      (draft) => mutation(draft as UnwrapRef<Writable<S>>, ...payloads),
     );
     // apply patches
     updateStore(store, doPatches);
@@ -194,7 +195,8 @@ export const defCommand = <
   return {
     dispatch: (...payloads: APayloads) =>
       action(
-        (...mpayloads: MPayloads) => mutation(state, ...mpayloads),
+        (...mpayloads: MPayloads) =>
+          mutation(state as UnwrapRef<Writable<S>>, ...mpayloads),
         ...payloads,
       ),
     command: (...payloads: APayloads) => action(commandFunc, ...payloads),

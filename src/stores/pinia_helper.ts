@@ -6,6 +6,7 @@ import {
   DefineStoreOptions,
 } from 'pinia';
 import { computed, ComputedRef, UnwrapRef, DeepReadonly } from 'vue';
+import { Marked } from '@/utils/typeutil';
 
 /**
  * Stateを直接変更できないようにdefineStateでStoreとは別にStateを定義する.
@@ -49,7 +50,7 @@ export class StateController<Id extends string, S extends StateTree> {
     // 一般に公開するreadonlyなstate
     const state = this.useState();
     // 書き込み可能なstate
-    const _writableState = state as Store<Id, S>;
+    const _writableState = state as Store<Id, Writable<S>>;
 
     // getterに必要なstateの依存を解決する関数
     const get = <Ret>(getter: GetterDefinition<S, Ret>): Ret => {
@@ -81,7 +82,7 @@ export class StateController<Id extends string, S extends StateTree> {
     const defMut = <Payloads extends unknown[]>(
       mutation: MutationDefinition<S, Payloads>,
     ) => {
-      const mutationObj = mutation as Mutation<S, Payloads>;
+      const mutationObj = mutation as unknown as Mutation<S, Payloads>;
       mutationObj.commit = asAct(mutation);
       return mutationObj;
     };
@@ -98,6 +99,9 @@ export class StateController<Id extends string, S extends StateTree> {
     };
   }
 }
+
+const WRITABLE: unique symbol = Symbol('WRITABLE');
+export type Writable<S extends StateTree> = Marked<typeof WRITABLE, S>;
 
 export type StateStoreDefinition<
   Id extends string,
@@ -116,7 +120,7 @@ export type Getter<S extends StateTree, Ret> = GetterDefinition<S, Ret> & {
 export type MutationDefinition<
   S extends StateTree,
   Payloads extends unknown[],
-> = (draft: UnwrapRef<S>, ...payloads: Payloads) => void;
+> = (draft: Writable<UnwrapRef<S>>, ...payloads: Payloads) => void;
 type Mutation<
   S extends StateTree,
   Payloads extends unknown[],
