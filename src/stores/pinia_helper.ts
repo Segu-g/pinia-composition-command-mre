@@ -54,19 +54,19 @@ export class StateController<Id extends string, S extends StateTree> {
 
     // getterに必要なstateの依存を解決する関数
     const get = <Ret>(getter: GetterDefinition<S, Ret>): Ret => {
-      return getter(state);
+      return getter(state as DeepReadonly<S>);
     };
     // getterを定義するための関数
     // getterに.getプロパティを追加し、computedに追加する
     const defGet = <Ret>(getter: GetterDefinition<S, Ret>): Getter<S, Ret> => {
       const getterObj = getter as Getter<S, Ret>;
-      getterObj.get = computed(() => get(getter));
+      getterObj.get = computed(() => getter(state));
       return getterObj;
     };
     const getRef = <Ret>(
       getter: GetterDefinition<S, Ret>,
     ): ComputedRef<Ret> => {
-      return computed(() => getter(state));
+      return computed(() => getter(state as DeepReadonly<S>));
     };
 
     // eslint-disable-next-line @typescript-eslint/ban-types
@@ -113,7 +113,9 @@ export type StateStore<Id extends string, S extends StateTree> = Store<
   Record<never, never>,
   Record<never, never>
 >;
-export type GetterDefinition<S extends StateTree, Ret> = (state: S) => Ret;
+export type GetterDefinition<S extends StateTree, Ret> = (
+  state: DeepReadonly<S>,
+) => Ret;
 export type Getter<S extends StateTree, Ret> = GetterDefinition<S, Ret> & {
   get: ComputedRef<Ret>;
 };
