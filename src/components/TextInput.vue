@@ -3,12 +3,12 @@ import { useText } from '@/stores';
 const store = useText();
 const onChange = (evt: Event) =>
   evt.target instanceof HTMLInputElement &&
-  store.commandChangeText.dispatch(evt.target?.value ?? '');
+  store.commandChangeText.command(evt.target?.value ?? '');
 </script>
 
 <template>
   <div class="card">
-    <p>{{ store.textGet.get }}</p>
-    <input :value="store.textGet.get" @input="onChange" />
+    <p>{{ store.state.text }}</p>
+    <input :value="store.state.text" @input="onChange" />
   </div>
 </template>
