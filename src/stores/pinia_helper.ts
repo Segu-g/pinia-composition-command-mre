@@ -101,7 +101,7 @@ export class StateController<Id extends string, S extends StateTree> {
 }
 
 const WRITABLE: unique symbol = Symbol('WRITABLE');
-export type Writable<S extends StateTree> = Marked<typeof WRITABLE, S>;
+export type Writable<S> = Marked<typeof WRITABLE, S>;
 
 export type StateStoreDefinition<
   Id extends string,
