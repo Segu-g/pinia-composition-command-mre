@@ -1,7 +1,7 @@
 import {
   defineStore,
   StoreDefinition,
-  StoreGeneric,
+  Store,
   StateTree,
   DefineStoreOptions,
 } from 'pinia';
@@ -144,8 +144,8 @@ export class CommandableStateController<
   }
 }
 
-function updateStore(store: StoreGeneric, patches: Patch[]) {
-  store.$patch((state) => {
+function updateStore(store: Store, patches: Patch[]) {
+  store.$patch((state: Objectish) => {
     applyPatchesImpl(state, patches);
   });
 }
@@ -163,10 +163,10 @@ const convertAsCommand = <
     // Record operations
     const [, doPatches, undoPatches] = immer.produceWithPatches(
       store.$state,
-      (draft) => mutation(draft as UnwrapRef<Writable<S>>, ...payloads),
+      (draft) => mutation(draft as Writable<UnwrapRef<S>>, ...payloads),
     );
     // apply patches
-    updateStore(store, doPatches);
+    updateStore(store as Store, doPatches);
     commandStore.$pushCommand({
       [store.$id]: {
         doPatches: doPatches,

@@ -54,19 +54,25 @@ export class StateController<Id extends string, S extends StateTree> {
 
     // getterに必要なstateの依存を解決する関数
     const get = <Ret>(getter: GetterDefinition<S, Ret>): Ret => {
-      return getter(state as DeepReadonly<S>);
+      return getter(state);
     };
     // getterを定義するための関数
-    // getterに.getプロパティを追加し、computedに追加する
-    const defGet = <Ret>(getter: GetterDefinition<S, Ret>): Getter<S, Ret> => {
-      const getterObj = getter as Getter<S, Ret>;
-      getterObj.get = computed(() => getter(state));
-      return getterObj;
+    // 元関数を.funcプロパティに定義
+    // .getプロパティにstateを渡した関数を定義する
+    const defGet = <Ret>(
+      getterDef: GetterDefinition<S, Ret>,
+    ): Getter<S, Ret> => {
+      const getter: Getter<S, Ret> = {
+        func: getterDef,
+        get: () => getterDef(state),
+        value: computed(() => getterDef(state)),
+      };
+      return getter;
     };
     const getRef = <Ret>(
       getter: GetterDefinition<S, Ret>,
     ): ComputedRef<Ret> => {
-      return computed(() => getter(state as DeepReadonly<S>));
+      return computed(() => getter(state));
     };
 
     // eslint-disable-next-line @typescript-eslint/ban-types
@@ -80,11 +86,13 @@ export class StateController<Id extends string, S extends StateTree> {
       (...payloads: Payloads) =>
         mutation(_writableState, ...payloads);
     const defMut = <Payloads extends unknown[]>(
-      mutation: MutationDefinition<S, Payloads>,
+      mutationDef: MutationDefinition<S, Payloads>,
     ) => {
-      const mutationObj = mutation as unknown as Mutation<S, Payloads>;
-      mutationObj.commit = asAct(mutation);
-      return mutationObj;
+      const mutaiton: Mutation<S, Payloads> = {
+        func: mutationDef,
+        commit: asAct(mutationDef),
+      };
+      return mutaiton;
     };
 
     return {
@@ -114,19 +122,19 @@ export type StateStore<Id extends string, S extends StateTree> = Store<
   Record<never, never>
 >;
 export type GetterDefinition<S extends StateTree, Ret> = (
-  state: DeepReadonly<S>,
+  state: UnwrapRef<DeepReadonly<S>>,
 ) => Ret;
-export type Getter<S extends StateTree, Ret> = GetterDefinition<S, Ret> & {
-  get: ComputedRef<Ret>;
+export type Getter<S extends StateTree, Ret> = {
+  func: GetterDefinition<S, Ret>;
+  get: () => Ret;
+  value: ComputedRef<Ret>;
 };
 export type MutationDefinition<
   S extends StateTree,
   Payloads extends unknown[],
 > = (draft: Writable<UnwrapRef<S>>, ...payloads: Payloads) => void;
-type Mutation<
-  S extends StateTree,
-  Payloads extends unknown[],
-> = MutationDefinition<S, Payloads> & {
+type Mutation<S extends StateTree, Payloads extends unknown[]> = {
+  func: MutationDefinition<S, Payloads>;
   commit: (...payloads: Payloads) => void;
 };
 // eslint-disable-next-line @typescript-eslint/ban-types

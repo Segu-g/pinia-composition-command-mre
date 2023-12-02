@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { useText } from '@/stores';
 const store = useText();
-const onChange = (evt: Event) =>
+const onChange = (evt: Event) => {
   evt.target instanceof HTMLInputElement &&
-  store.commandChangeText.command(evt.target?.value ?? '');
+    store.commandChangeText.command(evt.target?.value ?? '');
+}
 </script>
 
 <template>
   <div class="card">
-    <p>{{ store.state.text }}</p>
+    <p>{{ store.textGet.value }}</p>
     <input :value="store.state.text" @input="onChange" />
   </div>
 </template>

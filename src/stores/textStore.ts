@@ -15,7 +15,7 @@ export const useText = defineStore('text', () => {
 
   // getter
   const textGet = defGet((state) => state.text);
-  const isTextSameToName = defGet((state) => state.name == textGet(state));
+  const isTextSameToName = defGet((state) => state.name == textGet.func(state));
   const isSameText = defGet((state) => (text: string) => state.text === text);
 
   // mutation
@@ -26,11 +26,15 @@ export const useText = defineStore('text', () => {
     state.name = text;
   });
   const changeTextAndNameMut = defMut((state, text: string, name: string) => {
-    changeTextMut(state, text);
-    changeNameMut(state, name);
+    // mutationからmutaitonを叩く時は.funcから直接関数として叩く
+    changeTextMut.func(state, text);
+    changeNameMut.func(state, name);
+    // TODO: 以下はESLintでエラーになって欲しい
+    // changeNameMut.commit(name);
   });
   const changeWhenTextSameMut = defMut((state, text: string) => {
-    if (isSameText(state)) {
+    // getterやreadonlyな関数はmutation内でも呼び出せる
+    if (isSameText.func(state)) {
       state.text = text;
     }
   });
@@ -41,16 +45,16 @@ export const useText = defineStore('text', () => {
     // state.text = text; // error
 
     // readonlyなstateを代入できないようにMutationのStateにBrandが付いている
-    // changeTextAndNameMut(state, text, name); // error
+    // changeTextAndNameMut.func(state, text, name); // error
 
     // actionからmutationを叩く時はcommitを叩く
     changeTextAndNameMut.commit(text, name);
 
-    // stateは直接呼んでも.getから呼んでも良い
-    return textGet.get.value == textGet(state);
+    // action内ではstateは直接呼んでも.getから呼んでも良い
+    return textGet.get() == textGet.func(state);
   });
   // command
-  const commandChangeText = asCmd(changeTextMut);
+  const commandChangeText = asCmd(changeTextMut.func);
 
   return {
     state: storeToRefs(state),

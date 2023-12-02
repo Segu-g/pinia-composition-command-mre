@@ -19,7 +19,7 @@ export const useCount = defineStore('count', () => {
     // increment(state); // error
     return state.counter;
   });
-  const commandIncrement = asCmd(increment);
+  const commandIncrement = asCmd(increment.func);
   const countUpWithVuex = defAct(() => {
     // increment(state) // error
     commandIncrement.dispatch();
