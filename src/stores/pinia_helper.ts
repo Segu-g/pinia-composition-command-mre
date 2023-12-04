@@ -132,7 +132,7 @@ export type Getter<S extends StateTree, Ret> = {
 export type MutationDefinition<
   S extends StateTree,
   Payloads extends unknown[],
-> = (draft: Writable<UnwrapRef<S>>, ...payloads: Payloads) => void;
+> = (draft: Writable<UnwrapRef<S>>, ...payloads: Payloads) => undefined;
 export type Mutation<S extends StateTree, Payloads extends unknown[]> = {
   func: MutationDefinition<S, Payloads>;
   commit: (...payloads: Payloads) => void;
