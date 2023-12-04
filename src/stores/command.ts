@@ -7,29 +7,30 @@ import {
 } from 'pinia';
 import { ref, computed, UnwrapRef } from 'vue';
 import { enablePatches, enableMapSet, Immer, Patch, Objectish } from 'immer';
-import { applyPatch } from 'rfc6902';
+// immerの内部関数であるgetPlugin("Patches").applyPatches_はexportされていないので
+// ビルド前のsrcからソースコードを読み込んで使う必要がある
+import { enablePatches as enablePatchesImpl } from 'immer/src/plugins/patches';
+import { enableMapSet as enableMapSetImpl } from 'immer/src/plugins/mapset';
+import { getPlugin } from 'immer/src/utils/plugins';
 
 import {
   StateController,
   StateStoreDefinition,
   StateStore,
   MutationDefinition,
+  Mutation,
   Action,
   Writable,
 } from './pinia_helper';
 
+// ビルド後のモジュールとビルド前のモジュールは別のスコープで変数を持っているので
+// enable * も両方叩く必要がある。
 enablePatches();
 enableMapSet();
-
-// immerのPatchをmutableに適応する
-function applyPatchesImpl<T extends Objectish>(base: T, patches: Patch[]) {
-  const operations = patches.map((patch) => ({
-    op: patch.op,
-    path: '/' + patch.path.reduce((prev, curr) => `${prev}/${curr}`),
-    value: patch.value,
-  }));
-  applyPatch(base, operations);
-}
+enablePatchesImpl();
+enableMapSetImpl();
+// immerのPatchをmutableに適応する内部関数
+const applyPatchesImpl = getPlugin('Patches').applyPatches_;
 
 const immer = new Immer();
 immer.setAutoFreeze(false);
@@ -127,14 +128,18 @@ export class CommandableStateController<
     ) => defCommand(commandStore, contexts._writableState, mutation, action);
     const asCmd = <Payloads extends unknown[]>(
       mutation: MutationDefinition<S, Payloads>,
-    ): Command<(...payloads: Payloads) => void> => ({
-      dispatch: contexts.asAct(mutation),
-      command: convertAsCommand(
-        commandStore,
-        contexts._writableState,
-        mutation,
-      ),
-    });
+    ): Command<(...payloads: Payloads) => void> & Mutation<S, Payloads> => {
+      const mut = contexts.defMut(mutation);
+      return {
+        ...mut,
+        dispatch: contexts.asAct(mutation),
+        command: convertAsCommand(
+          commandStore,
+          contexts._writableState,
+          mutation,
+        ),
+      };
+    };
 
     return {
       ...contexts,
