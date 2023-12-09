@@ -56,10 +56,90 @@ export class StateController<Id extends string, S extends StateTree> {
     };
   }
 
+  // Return readonly store.
   public useState(...args: Parameters<typeof this._useStore>) {
     const store = this._useStore(...args);
     return store as StateStore<Id, DeepReadonly<S>>;
   }
+
+  // Return writable store. DO NOT USE for general purpose.
+  public useWritableState(...args: Parameters<typeof this._useStore>) {
+    const store = this._useStore(...args);
+    return store;
+  }
+}
+
+// .vueや他モジュールからimportしたgetter, actionを呼び出すための補助関数
+export function useController() {
+  const dispatch = templateDispatchWithoutStore();
+  const get = templateGetWithoutStore();
+  return {
+    dispatch,
+    get,
+  };
+}
+
+function templateDispatchWithoutStore(): Dispatch {
+  function dispatch<
+    Id extends string,
+    S extends StateTree,
+    Payloads extends unknown[],
+    Ret,
+  >(action: Action<Id, S, Payloads, Ret>, ...payloads: Payloads) {
+    const state = action[STORE];
+    const actionContext: ActionContext<Id, S> = {
+      state: state as DeepReadonly<UnwrapRef<S>>,
+      dispatch,
+      commit: templateCommit<Id, S>(state),
+      get: templateGet<Id, S>(state as DeepReadonly<UnwrapRef<S>>),
+    };
+    return action[ACTION_TAG](actionContext, ...payloads);
+  }
+  return dispatch;
+}
+
+function templateGetWithoutStore() {
+  function get<Id extends string, S extends StateTree, Ret>(
+    getter: Getter<Id, S, Ret>,
+  ) {
+    const state = getter[STORE] as DeepReadonly<UnwrapRef<S>>;
+    const getterContext: GetterContext<Id, S> = {
+      state,
+      get: templateGet(state),
+    };
+    return getter[GETTER_TAG](getterContext);
+  }
+  return get;
+}
+
+function templateCommit<Id extends string, S extends StateTree>(
+  state: UnwrapRef<S>,
+): Commit<Id, S> {
+  const mutationContext: MutationContext<Id, S> = {
+    state,
+    get: templateGet<Id, S>(state as DeepReadonly<UnwrapRef<S>>),
+    commit,
+  };
+  function commit<Payloads extends unknown[]>(
+    mutaiton: Mutation<Id, S, Payloads>,
+    ...payloads: Payloads
+  ) {
+    return mutaiton[MUTATION_TAG](mutationContext, ...payloads);
+  }
+  return commit;
+}
+
+function templateGet<Id extends string, S extends StateTree>(
+  state: DeepReadonly<UnwrapRef<S>>,
+): Get<Id, S> {
+  const getterContext: GetterContext<Id, S> = {
+    state,
+    get,
+  };
+  function get<Ret>(getter: Getter<Id, S, Ret>) {
+    return getter[GETTER_TAG](getterContext);
+  }
+  return get;
 }
 
 // symbol for hiding
