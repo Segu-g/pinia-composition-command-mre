@@ -1,23 +1,27 @@
 import {
   defineStore,
-  StoreDefinition,
   Store,
-  StateTree,
   DefineStoreOptions,
+  StateTree,
+  StoreDefinition,
 } from 'pinia';
-import { computed, ComputedRef, UnwrapRef, DeepReadonly } from 'vue';
-import { Marked } from '@/utils/typeutil';
+import { UnwrapRef, DeepReadonly } from 'vue';
+
+// Vuexのstateに相当するpiniaのstoreを定義する関数
+export function defineState<Id extends string, S extends StateTree>(
+  options: DefineStoreOptions<
+    Id,
+    S,
+    Record<never, never>,
+    Record<never, never>
+  >,
+) {
+  return new StateController(options.id, defineStore(options));
+}
 
 /**
- * Stateを直接変更できないようにdefineStateでStoreとは別にStateを定義する.
+ * Stateに対してController(mutation, action)を用いた操作を定義するための関数
  */
-export const defineState = <Id extends string, S extends StateTree>(
-  option: DefineStoreOptions<Id, S, Record<never, never>, Record<never, never>>,
-) => {
-  const useStore = defineStore(option);
-  return new StateController(option.id, useStore);
-};
-
 export class StateController<Id extends string, S extends StateTree> {
   public readonly id: string;
   protected readonly _useStore: StateStoreDefinition<Id, S>;
@@ -26,118 +30,127 @@ export class StateController<Id extends string, S extends StateTree> {
     this._useStore = useStore;
   }
 
-  public useState(...params: Parameters<StateStoreDefinition<Id, S>>) {
-    return this._useStore(...params) as StateStore<Id, DeepReadonly<S>>;
-  }
-
-  public useWritableState(...params: Parameters<StateStoreDefinition<Id, S>>) {
-    return this._useStore(...params);
-  }
-
-  // Getterを定義するための型ヘルパー
-  public defGetRaw<Ret>(getter: GetterDefinition<S, Ret>) {
-    return getter;
-  }
-
-  // Mutationを定義するための型ヘルパー
-  public defMutRaw<Payloads extends unknown[]>(
-    mutation: MutationDefinition<S, Payloads>,
-  ) {
-    return mutation;
-  }
-
-  public useContext() {
-    // 一般に公開するreadonlyなstate
-    const state = this.useState();
-    // 書き込み可能なstate
-    const _writableState = state as Store<Id, Writable<S>>;
-
-    // getterに必要なstateの依存を解決する関数
-    const get = <Ret>(getter: GetterDefinition<S, Ret>): Ret => {
-      return getter(state);
-    };
-    // getterを定義するための関数
-    // 元関数を.funcプロパティに定義
-    // .getプロパティにstateを渡した関数を定義する
-    const defGet = <Ret>(
-      getterDef: GetterDefinition<S, Ret>,
-    ): Getter<S, Ret> => {
-      const getter: Getter<S, Ret> = {
-        func: getterDef,
-        get: () => getterDef(state),
-        value: computed(() => getterDef(state)),
-      };
-      return getter;
-    };
-    const getRef = <Ret>(
-      getter: GetterDefinition<S, Ret>,
-    ): ComputedRef<Ret> => {
-      return computed(() => getter(state));
-    };
-
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    const defAct = <A extends Function>(action: A): Action<A> => {
-      return {
-        dispatch: action,
-      };
-    };
-    const asAct =
-      <Payloads extends unknown[]>(mutation: MutationDefinition<S, Payloads>) =>
-      (...payloads: Payloads) =>
-        mutation(_writableState, ...payloads);
-    const defMut = <Payloads extends unknown[]>(
-      mutationDef: MutationDefinition<S, Payloads>,
-    ) => {
-      const mutaiton: Mutation<S, Payloads> = {
-        func: mutationDef,
-        commit: asAct(mutationDef),
-      };
-      return mutaiton;
-    };
-
+  /**
+   * getter, mutation, actionを定義するためのcontext (defGet, defMut, defAct) を得る関数
+   * */
+  public useControllerContext(...args: Parameters<typeof this._useStore>) {
+    const store = this._useStore(...args);
     return {
-      state,
-      _writableState,
-      defGet,
-      defMut,
-      defAct,
-      get,
-      getRef,
-      asAct,
+      defGet: <Ret>(
+        getterDef: GetterDefinition<Id, S, Ret>,
+      ): Getter<Id, S, Ret> => ({
+        [GETTER_TAG]: getterDef,
+        [STORE]: store,
+      }),
+      defMut: <Payloads extends unknown[]>(
+        mutationDef: MutationDefinition<Id, S, Payloads>,
+      ): Mutation<Id, S, Payloads> => ({
+        [MUTATION_TAG]: mutationDef,
+      }),
+      defAct: <Payloads extends unknown[], Ret>(
+        actionDef: ActionDefinition<Id, S, Payloads, Ret>,
+      ): Action<Id, S, Payloads, Ret> => ({
+        [ACTION_TAG]: actionDef,
+        [STORE]: store,
+      }),
     };
+  }
+
+  public useState(...args: Parameters<typeof this._useStore>) {
+    const store = this._useStore(...args);
+    return store as StateStore<Id, DeepReadonly<S>>;
   }
 }
 
-const WRITABLE: unique symbol = Symbol('WRITABLE');
-export type Writable<S> = Marked<typeof WRITABLE, S>;
+// symbol for hiding
+export const GETTER_TAG: unique symbol = Symbol();
+export const MUTATION_TAG: unique symbol = Symbol();
+export const ACTION_TAG: unique symbol = Symbol();
+export const STORE: unique symbol = Symbol();
 
-export type StateStoreDefinition<
+// Context functions
+export type Get<Id extends string, S extends StateTree> = <Ret>(
+  getter: Getter<Id, S, Ret>,
+) => Ret;
+export type Commit<Id extends string, S extends StateTree> = <
+  Payloads extends unknown[],
+>(
+  mutation: Mutation<Id, S, Payloads>,
+  ...payloads: Payloads
+) => void;
+export type Dispatch = <
+  Id extends string,
+  S extends StateTree,
+  Payloads extends unknown[],
+  Ret,
+>(
+  action: Action<Id, S, Payloads, Ret>,
+  ...payloads: Payloads
+) => Ret;
+
+// Getter
+export type GetterContext<Id extends string, S extends StateTree> = {
+  state: DeepReadonly<UnwrapRef<S>>;
+  get: Get<Id, S>;
+};
+export type GetterDefinition<Id extends string, S extends StateTree, Ret> = (
+  context: GetterContext<Id, S>,
+) => Ret;
+export type Getter<Id extends string, S extends StateTree, Ret> = {
+  [GETTER_TAG]: GetterDefinition<Id, S, Ret>;
+  [STORE]: Store<Id, S>;
+};
+
+// Mutation
+export type MutationContext<Id extends string, S extends StateTree> = {
+  state: UnwrapRef<S>;
+  get: Get<Id, S>;
+  commit: Commit<Id, S>;
+};
+export type MutationDefinition<
+  Id extends string,
+  S extends StateTree,
+  Payloads extends unknown[],
+> = (context: MutationContext<Id, S>, ...payloads: Payloads) => undefined;
+export type Mutation<
+  Id extends string,
+  S extends StateTree,
+  Payloads extends unknown[],
+> = {
+  [MUTATION_TAG]: MutationDefinition<Id, S, Payloads>;
+};
+
+// Action
+export type ActionContext<Id extends string, S extends StateTree> = {
+  state: DeepReadonly<UnwrapRef<S>>;
+  get: Get<Id, S>;
+  commit: Commit<Id, S>;
+  dispatch: Dispatch;
+};
+export type ActionDefinition<
+  Id extends string,
+  S extends StateTree,
+  Payloads extends unknown[],
+  Ret,
+> = (context: ActionContext<Id, S>, ...payloads: Payloads) => Ret;
+export type Action<
+  Id extends string,
+  S extends StateTree,
+  Payloads extends unknown[],
+  Ret,
+> = {
+  [ACTION_TAG]: ActionDefinition<Id, S, Payloads, Ret>;
+  [STORE]: Store<Id, S>;
+};
+
+// state only store or stateDefinition type
+type StateStoreDefinition<
   Id extends string,
   S extends StateTree,
 > = StoreDefinition<Id, S, Record<never, never>, Record<never, never>>;
-export type StateStore<Id extends string, S extends StateTree> = Store<
+type StateStore<Id extends string, S extends StateTree> = Store<
   Id,
   S,
   Record<never, never>,
   Record<never, never>
 >;
-export type GetterDefinition<S extends StateTree, Ret> = (
-  state: UnwrapRef<DeepReadonly<S>>,
-) => Ret;
-export type Getter<S extends StateTree, Ret> = {
-  func: GetterDefinition<S, Ret>;
-  get: () => Ret;
-  value: ComputedRef<Ret>;
-};
-export type MutationDefinition<
-  S extends StateTree,
-  Payloads extends unknown[],
-> = (draft: Writable<UnwrapRef<S>>, ...payloads: Payloads) => undefined;
-export type Mutation<S extends StateTree, Payloads extends unknown[]> = {
-  func: MutationDefinition<S, Payloads>;
-  commit: (...payloads: Payloads) => void;
-};
-// eslint-disable-next-line @typescript-eslint/ban-types
-export type Action<A extends Function> = {
-  dispatch: A;
-};
