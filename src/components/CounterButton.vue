@@ -1,13 +1,9 @@
 <script setup lang="ts">
-import { useCount } from '@/stores';
-const store = useCount();
-const countUp = () => store.commandIncrement.command();
+const countUp = () => {};
 </script>
 
 <template>
   <div class="card">
-    <button type="button" @click="countUp">
-      count is {{ store.state.counter }}
-    </button>
+    <button type="button" @click="countUp">count is {{ 0 }}</button>
   </div>
 </template>

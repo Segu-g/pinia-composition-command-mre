@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { useCount } from '@/stores';
 import { useStore } from '@/vuex-store';
 const store = useStore();
-const piniaCount = useCount();
 </script>
 
 <template>
@@ -10,8 +8,6 @@ const piniaCount = useCount();
     <button type="button" @click="store.commit('increment')">
       vuex count is {{ store.state.count }}
     </button>
-    <button type="button" @click="piniaCount.countUpWithVuex.dispatch()">
-      count up with pinia
-    </button>
+    <button type="button" @click="console.log">count up with pinia</button>
   </div>
 </template>

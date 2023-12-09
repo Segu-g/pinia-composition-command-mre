@@ -1,15 +1,8 @@
-<script setup lang="ts">
-import { useCommand } from '@/stores';
-const command = useCommand();
-</script>
+<script setup lang="ts"></script>
 
 <template>
   <div>
-    <button type="button" :disabled="!command.undoable" @click="command.undo">
-      UNDO
-    </button>
-    <button type="button" :disabled="!command.redoable" @click="command.redo">
-      REDO
-    </button>
+    <button type="button" :disabled="!false" @click="console.log">UNDO</button>
+    <button type="button" :disabled="!false" @click="console.log">REDO</button>
   </div>
 </template>
