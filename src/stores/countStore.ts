@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
-import { defineState } from './pinia_helper';
+import { defineCommandableState } from './command';
 
-const CountState = defineState({
+const CountState = defineCommandableState({
   id: 'count/state',
   state: () => ({
     counter: 0,
@@ -9,7 +9,8 @@ const CountState = defineState({
 });
 
 export const useCount = defineStore('count', () => {
-  const { defGet, defMut, defAct } = CountState.useControllerContext();
+  const { defGet, defMut, defCmd, invalidateRecord } =
+    CountState.useControllerContext();
 
   const getCount = defGet(({ state }) => {
     return state.counter;
@@ -17,12 +18,14 @@ export const useCount = defineStore('count', () => {
   const mutIncrement = defMut(({ state }) => {
     state.counter += 1;
   });
-  const actIncrement = defAct(({ commit }) => {
-    commit(mutIncrement);
+  const cmdIncrement = defCmd(({ recordCommit }) => {
+    recordCommit(mutIncrement);
   });
+  const actIncrement = invalidateRecord(cmdIncrement);
 
   return {
     getCount,
+    cmdIncrement,
     actIncrement,
   };
 });
