@@ -147,7 +147,7 @@ export function useController(...args: Parameters<StoreDefinition>) {
   const callers = useControllerOrig();
   const commandDispatch = templateCommandDispatchWithoutStore(comamndStore);
   return {
-    callers,
+    ...callers,
     commandDispatch,
   };
 }
