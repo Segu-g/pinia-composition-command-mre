@@ -40,7 +40,7 @@ export class StateController<Id extends string, S extends StateTree> {
         getterDef: GetterDefinition<Id, S, Ret>,
       ): Getter<Id, S, Ret> => ({
         [GETTER_TAG]: getterDef,
-        [STORE]: store,
+        [STORE_TAG]: store,
       }),
       defMut: <Payloads extends unknown[]>(
         mutationDef: MutationDefinition<Id, S, Payloads>,
@@ -51,8 +51,9 @@ export class StateController<Id extends string, S extends StateTree> {
         actionDef: ActionDefinition<Id, S, Payloads, Ret>,
       ): Action<Id, S, Payloads, Ret> => ({
         [ACTION_TAG]: actionDef,
-        [STORE]: store,
+        [STORE_TAG]: store,
       }),
+      _store: store,
     };
   }
 
@@ -86,7 +87,7 @@ function templateDispatchWithoutStore(): Dispatch {
     Payloads extends unknown[],
     Ret,
   >(action: Action<Id, S, Payloads, Ret>, ...payloads: Payloads) {
-    const state = action[STORE];
+    const state = action[STORE_TAG];
     const actionContext: ActionContext<Id, S> = {
       state: state as DeepReadonly<UnwrapRef<S>>,
       dispatch,
@@ -102,7 +103,7 @@ function templateGetWithoutStore() {
   function get<Id extends string, S extends StateTree, Ret>(
     getter: Getter<Id, S, Ret>,
   ) {
-    const state = getter[STORE] as DeepReadonly<UnwrapRef<S>>;
+    const state = getter[STORE_TAG] as DeepReadonly<UnwrapRef<S>>;
     const getterContext: GetterContext<Id, S> = {
       state,
       get: templateGet(state),
@@ -146,7 +147,7 @@ function templateGet<Id extends string, S extends StateTree>(
 export const GETTER_TAG: unique symbol = Symbol();
 export const MUTATION_TAG: unique symbol = Symbol();
 export const ACTION_TAG: unique symbol = Symbol();
-export const STORE: unique symbol = Symbol();
+export const STORE_TAG: unique symbol = Symbol();
 
 // Context functions
 export type Get<Id extends string, S extends StateTree> = <Ret>(
@@ -178,7 +179,7 @@ export type GetterDefinition<Id extends string, S extends StateTree, Ret> = (
 ) => Ret;
 export type Getter<Id extends string, S extends StateTree, Ret> = {
   [GETTER_TAG]: GetterDefinition<Id, S, Ret>;
-  [STORE]: Store<Id, S>;
+  [STORE_TAG]: Store<Id, S>;
 };
 
 // Mutation
@@ -220,15 +221,15 @@ export type Action<
   Ret,
 > = {
   [ACTION_TAG]: ActionDefinition<Id, S, Payloads, Ret>;
-  [STORE]: Store<Id, S>;
+  [STORE_TAG]: Store<Id, S>;
 };
 
 // state only store or stateDefinition type
-type StateStoreDefinition<
+export type StateStoreDefinition<
   Id extends string,
   S extends StateTree,
 > = StoreDefinition<Id, S, Record<never, never>, Record<never, never>>;
-type StateStore<Id extends string, S extends StateTree> = Store<
+export type StateStore<Id extends string, S extends StateTree> = Store<
   Id,
   S,
   Record<never, never>,
