@@ -80,7 +80,7 @@ export function useController() {
   };
 }
 
-function templateDispatchWithoutStore(): Dispatch {
+export function templateDispatchWithoutStore(): Dispatch {
   function dispatch<
     Id extends string,
     S extends StateTree,
@@ -99,7 +99,7 @@ function templateDispatchWithoutStore(): Dispatch {
   return dispatch;
 }
 
-function templateGetWithoutStore() {
+export function templateGetWithoutStore() {
   function get<Id extends string, S extends StateTree, Ret>(
     getter: Getter<Id, S, Ret>,
   ) {
@@ -113,7 +113,7 @@ function templateGetWithoutStore() {
   return get;
 }
 
-function templateCommit<Id extends string, S extends StateTree>(
+export function templateCommit<Id extends string, S extends StateTree>(
   state: UnwrapRef<S>,
 ): Commit<Id, S> {
   const mutationContext: MutationContext<Id, S> = {
@@ -130,7 +130,7 @@ function templateCommit<Id extends string, S extends StateTree>(
   return commit;
 }
 
-function templateGet<Id extends string, S extends StateTree>(
+export function templateGet<Id extends string, S extends StateTree>(
   state: DeepReadonly<UnwrapRef<S>>,
 ): Get<Id, S> {
   const getterContext: GetterContext<Id, S> = {
