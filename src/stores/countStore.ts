@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { defineState } from './pinia_helper';
+import { defineState, useSingleStateContext } from './pinia-helper';
 
 const CountState = defineState({
   id: 'count/state',
@@ -9,7 +9,7 @@ const CountState = defineState({
 });
 
 export const useCount = defineStore('count', () => {
-  const { defGet, defMut, defAct } = CountState.useControllerContext();
+  const { defGet, defMut, defAct } = useSingleStateContext(CountState);
 
   const getCount = defGet(({ state }) => {
     return state.counter;

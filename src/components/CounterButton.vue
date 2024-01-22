@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useController } from '@/stores/pinia_helper';
+import { useStateStore } from '@/stores/pinia-helper';
 import { useCount } from '@/stores';
 const countStore = useCount();
-const { dispatch, get } = useController();
+const { dispatch, get } = useStateStore();
 const countValue = computed(() => get(countStore.getCount));
 const countUp = () => {
+  console.log(countStore.actIncrement);
   dispatch(countStore.actIncrement);
 };
 </script>

@@ -3,3 +3,4 @@ export {
   useStateContext,
   useSingleStateContext,
 } from './definition';
+export { useStateStore } from './execution';

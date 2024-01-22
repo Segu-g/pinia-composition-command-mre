@@ -34,7 +34,9 @@ export type Action<Payloads extends unknown[], Ret> = {
 export function Action<Payloads extends unknown[], Ret>(
   action: ActionDefinition<Payloads, Ret>,
 ): Action<Payloads, Ret> {
-  return action as unknown as Action<Payloads, Ret>;
+  return {
+    [ACTION]: action,
+  };
 }
 export function unwrapAction<Payloads extends unknown[], Ret>(
   action: Action<Payloads, Ret>,

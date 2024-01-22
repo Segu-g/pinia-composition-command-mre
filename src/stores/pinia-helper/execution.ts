@@ -1,5 +1,5 @@
-import { UnwrapRef, DeepReadonly } from "vue";
-import { StateTree } from "pinia";
+import { UnwrapRef, DeepReadonly } from 'vue';
+import { StateTree } from 'pinia';
 import {
   USE_STATE,
   Fetch,
@@ -17,7 +17,7 @@ import {
   Mutation,
   MutationContext,
   unwrapMutation,
-} from "./interface";
+} from './interface';
 
 type StateStoreExecContext = {
   fetch: Fetch;
@@ -33,10 +33,10 @@ export function useStateStore(): StateStoreExecContext {
 }
 
 export function templateFetch(
-  stateMap: Record<string, UnwrapRef<StateTree>>
+  stateMap: Record<string, UnwrapRef<StateTree>>,
 ): Fetch {
   return function fetch<Id extends string, S extends StateTree>(
-    state: StateStore<Id, S>
+    state: StateStore<Id, S>,
   ): UnwrapRef<S> {
     if (!(state[USE_STATE].$id in stateMap)) {
       stateMap[state[USE_STATE].$id] = state[USE_STATE]();
@@ -46,10 +46,10 @@ export function templateFetch(
 }
 
 export function templateReadonlyFetch(
-  stateMap: Record<string, UnwrapRef<StateTree>>
+  stateMap: Record<string, UnwrapRef<StateTree>>,
 ): ReadonlyFetch {
   return function fetch<Id extends string, S extends StateTree>(
-    state: StateStore<Id, S>
+    state: StateStore<Id, S>,
   ): DeepReadonly<UnwrapRef<S>> {
     if (!(state[USE_STATE].$id in stateMap)) {
       stateMap[state[USE_STATE].$id] = state[USE_STATE]();
@@ -59,19 +59,19 @@ export function templateReadonlyFetch(
 }
 
 export function templateGet(
-  stateMap: Record<string, UnwrapRef<StateTree>>
+  stateMap: Record<string, UnwrapRef<StateTree>>,
 ): Get {
-  const ctx: GetterContext = {
-    fetch: templateReadonlyFetch(stateMap),
-    get: templateGet(stateMap),
-  };
   return function get<Ret>(getter: Getter<Ret>) {
+    const ctx: GetterContext = {
+      fetch: templateReadonlyFetch(stateMap),
+      get: templateGet(stateMap),
+    };
     return unwrapGetter(getter)(ctx) as DeepReadonly<Ret>;
   };
 }
 
 export function templateCommit(
-  stateMap: Record<string, UnwrapRef<StateTree>>
+  stateMap: Record<string, UnwrapRef<StateTree>>,
 ): Commit {
   return function commit<Payloads extends unknown[]>(
     mutation: Mutation<Payloads>,
@@ -87,7 +87,7 @@ export function templateCommit(
 }
 
 export function templateDispatch(
-  stateMap: Record<string, UnwrapRef<StateTree>> = {}
+  stateMap: Record<string, UnwrapRef<StateTree>> = {},
 ): Dispatch {
   return function dispatch<Payloads extends unknown[], Ret>(
     action: Action<Payloads, Ret>,
