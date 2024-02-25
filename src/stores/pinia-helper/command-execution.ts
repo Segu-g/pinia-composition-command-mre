@@ -20,6 +20,7 @@ import {
   CommandPatches,
 } from './command-interface';
 import {
+  useStateStore,
   templateReadonlyFetch,
   templateGet,
   templateCommit,
@@ -32,13 +33,11 @@ import { PatchListener, isDraft } from 'immer';
 type CommandStateStoreExecContext = StateStoreExecContext & {
   command: CommandDispatch;
 };
-export function useStateStore(
+export function useCommandStore(
   history: CommandStoreInterface,
 ): CommandStateStoreExecContext {
   return {
-    fetch: (state) => state[USE_STATE](),
-    get: templateGet({}),
-    dispatch: templateDispatch({}),
+    ...useStateStore(),
     command: templateCommandDispatch(history),
   };
 }

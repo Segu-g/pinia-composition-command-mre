@@ -2,12 +2,11 @@
 import { TextState, useText } from "@/stores/textStore"
 import { useCommandStore } from '@/stores/pinia-helper';
 import { useHistory } from "@/stores/command";
-import { computed } from "vue";
 
 const textStore = useText();
 const history = useHistory();
 const { fetch, command } = useCommandStore(history);
-const text = computed(() => fetch(TextState).text)
+const state = fetch(TextState);
 const onChange = (evt: Event) => {
   evt.target instanceof HTMLInputElement && command(textStore.changeTextCmd, evt.target.value);
 };
@@ -15,7 +14,7 @@ const onChange = (evt: Event) => {
 
 <template>
   <div class="card">
-    <p>{{ text }}</p>
-    <input :value="text" @input="onChange" />
+    <p>{{ state.text }}</p>
+    <input :value="state.text" @input="onChange" />
   </div>
 </template>

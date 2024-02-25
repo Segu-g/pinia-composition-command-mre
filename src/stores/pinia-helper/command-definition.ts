@@ -12,8 +12,6 @@ import { Action, Dispatch } from './interface';
 
 export { defineHistory, defineCommandableStateStore } from './command-history';
 
-export { useStateStore } from './command-execution';
-
 const templateNonRecordCommandDispatch =
   (dispatch: Dispatch): CommandDispatch =>
   <Payloads extends unknown[], Ret>(

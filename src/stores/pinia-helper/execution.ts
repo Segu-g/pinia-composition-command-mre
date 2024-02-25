@@ -1,4 +1,4 @@
-import { UnwrapRef, DeepReadonly } from 'vue';
+import { UnwrapRef, DeepReadonly, computed } from 'vue';
 import { StateTree } from 'pinia';
 import {
   USE_STATE,
@@ -17,17 +17,21 @@ import {
   Mutation,
   MutationContext,
   unwrapMutation,
+  ComputedGet,
 } from './interface';
 
 export type StateStoreExecContext = {
   fetch: Fetch;
   get: Get;
   dispatch: Dispatch;
+  computed: ComputedGet;
 };
 export function useStateStore(): StateStoreExecContext {
+  const get = templateGet({});
   return {
     fetch: (state) => state[USE_STATE](),
-    get: templateGet({}),
+    get,
+    computed: (getter) => computed(() => get(getter)),
     dispatch: templateDispatch(),
   };
 }

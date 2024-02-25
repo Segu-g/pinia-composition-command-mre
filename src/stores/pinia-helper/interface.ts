@@ -1,5 +1,5 @@
 import { StateTree, StoreDefinition } from 'pinia';
-import { UnwrapRef, DeepReadonly } from 'vue';
+import { UnwrapRef, DeepReadonly, ComputedRef } from 'vue';
 
 const GETTER: unique symbol = Symbol();
 export type Getter<Ret> = {
@@ -69,6 +69,10 @@ export type Dispatch = <Payloads extends unknown[], Ret>(
   action: Action<Payloads, Ret>,
   ...payloads: Payloads
 ) => Ret;
+
+export type ComputedGet = <Ret>(
+  getter: Getter<Ret>,
+) => ComputedRef<DeepReadonly<Ret>>;
 
 export type GetterContext = {
   /**

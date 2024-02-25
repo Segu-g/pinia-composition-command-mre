@@ -10,4 +10,4 @@ export {
   useSingleCommandContext,
 } from './command-definition';
 export { useStateStore } from './execution';
-export { useStateStore as useCommandStore } from './command-execution';
+export { useCommandStore } from './command-execution';
