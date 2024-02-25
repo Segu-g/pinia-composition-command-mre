@@ -96,7 +96,7 @@ export function templateDispatch(
     const ctx: ActionContext = {
       fetch: templateReadonlyFetch(stateMap),
       get: templateGet(stateMap),
-      commit: templateCommit({}),
+      commit: templateCommit(stateMap),
       dispatch: dispatch,
     };
     return unwrapAction(action)(ctx, ...payloads);
