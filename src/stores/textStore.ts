@@ -1,7 +1,10 @@
 import { defineStore } from 'pinia';
-import { defineState, useSingleStateContext } from './pinia-helper';
+import {
+  defineCommandableStateStore,
+  useSingleCommandContext,
+} from './pinia-helper/command-definition';
 
-export const TextState = defineState({
+export const TextState = defineCommandableStateStore({
   id: 'text/state',
   state: () => ({
     text: '',
@@ -10,12 +13,12 @@ export const TextState = defineState({
 });
 
 export const useText = defineStore('text', () => {
-  const { defMut, defAct } = useSingleStateContext(TextState);
+  const { defMut, defCmd } = useSingleCommandContext(TextState);
   const changeTextMut = defMut(({ state }, text: string) => {
     state.text = text;
   });
-  const changeTextAct = defAct(({ commit }, text: string) => {
-    commit(changeTextMut, text);
+  const changeTextCmd = defCmd(({ record }, text: string) => {
+    record(changeTextMut, text);
   });
-  return { changeTextAct };
+  return { changeTextCmd };
 });

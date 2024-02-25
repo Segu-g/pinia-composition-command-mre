@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { TextState, useText } from "@/stores/textStore"
-import { useStateStore } from '@/stores/pinia-helper';
+import { useStateStore } from '@/stores/pinia-helper/command-execution';
+import { useHistory } from "@/stores/command";
 import { computed } from "vue";
 
 const textStore = useText();
-const { dispatch, fetch } = useStateStore();
+const history = useHistory();
+const { fetch, command } = useStateStore(history);
 const text = computed(() => fetch(TextState).text)
 const onChange = (evt: Event) => {
-  evt.target instanceof HTMLInputElement && dispatch(textStore.changeTextAct, evt.target.value);
+  evt.target instanceof HTMLInputElement && command(textStore.changeTextCmd, evt.target.value);
 };
 </script>
 
