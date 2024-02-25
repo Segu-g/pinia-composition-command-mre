@@ -1,4 +1,3 @@
-import { DeepReadonly, UnwrapRef } from 'vue';
 import { defineStore, DefineStoreOptions, StateTree } from 'pinia';
 import {
   USE_STATE,
@@ -6,9 +5,9 @@ import {
   Action,
   Getter,
   Mutation,
-  GetterContext,
-  MutationContext,
-  ActionContext,
+  defSingleStateGetter,
+  defSingleStateMutaiton,
+  defSingleStateAction,
 } from './interface';
 
 /**
@@ -28,29 +27,7 @@ export function defineState<Id extends string, S extends StateTree>(
   };
 }
 
-export type StateContext = {
-  defGet: typeof Getter;
-  defMut: typeof Mutation;
-  defAct: typeof Action;
-};
-export type SingleStateContext<S extends StateTree> = {
-  defGet: <Ret>(
-    getter: (ctx: GetterContext & { state: DeepReadonly<UnwrapRef<S>> }) => Ret,
-  ) => Getter<Ret>;
-  defMut: <Payloads extends unknown[]>(
-    mutation: (
-      ctx: MutationContext & { state: UnwrapRef<S> },
-      ...payloads: Payloads
-    ) => undefined,
-  ) => Mutation<Payloads>;
-  defAct: <Ret, Payloads extends unknown[]>(
-    action: (
-      ctx: ActionContext & { state: DeepReadonly<UnwrapRef<S>> },
-      ...payloads: Payloads
-    ) => Ret,
-  ) => Action<Payloads, Ret>;
-};
-export function useStateContext(): StateContext {
+export function useStateContext() {
   return {
     defGet: Getter,
     defMut: Mutation,
@@ -60,25 +37,10 @@ export function useStateContext(): StateContext {
 
 export function useSingleStateContext<Id extends string, S extends StateTree>(
   state: StateStore<Id, S>,
-): SingleStateContext<S> {
+) {
   return {
-    defGet: (getter) =>
-      Getter((ctx, ...payloads) =>
-        getter({ ...ctx, state: ctx.fetch(state) }, ...payloads),
-      ),
-    defMut: (mutation) =>
-      Mutation((ctx, ...payloads) =>
-        mutation({ ...ctx, state: ctx.fetch(state) }, ...payloads),
-      ),
-    defAct: (action) =>
-      Action((ctx, ...payloads) =>
-        action(
-          {
-            ...ctx,
-            state: ctx.fetch(state),
-          },
-          ...payloads,
-        ),
-      ),
+    defGet: defSingleStateGetter(state),
+    defMut: defSingleStateMutaiton(state),
+    defAct: defSingleStateAction(state),
   };
 }

@@ -137,3 +137,72 @@ export type ActionDefinition<Payloads extends unknown[], Ret> = (
   // actionの引数
   ...payloads: Payloads
 ) => Ret;
+
+/**
+ * 単一ストアのメソッド定義用
+ */
+export type SingleStateGetterContext<S extends StateTree> = {
+  state: DeepReadonly<UnwrapRef<S>>;
+} & GetterContext;
+export type SingleStateGetterDefinition<S extends StateTree, Ret> = (
+  context: SingleStateGetterContext<S>,
+) => Ret;
+export const defSingleStateGetter =
+  <Id extends string, S extends StateTree>(state: StateStore<Id, S>) =>
+  <Ret>(getter: SingleStateGetterDefinition<S, Ret>): Getter<Ret> => {
+    return { [GETTER]: (ctx) => getter({ ...ctx, state: ctx.fetch(state) }) };
+  };
+
+export type SingleStateMutationContext<S extends StateTree> = {
+  state: UnwrapRef<S>;
+  fetch: ReadonlyFetch;
+} & Omit<MutationContext, 'fetch'>;
+export type SingleStateMutationDefinition<
+  S extends StateTree,
+  Payloads extends unknown[],
+> = (
+  context: SingleStateMutationContext<S>,
+  ...payloads: Payloads
+) => undefined;
+export const defSingleStateMutaiton =
+  <Id extends string, S extends StateTree>(state: StateStore<Id, S>) =>
+  <Paylodas extends unknown[]>(
+    mutaiton: SingleStateMutationDefinition<S, Paylodas>,
+  ): Mutation<Paylodas> => {
+    return {
+      [MUTATION]: (ctx, ...payloads) =>
+        mutaiton(
+          {
+            ...ctx,
+            state: ctx.fetch(state),
+            fetch: ctx.fetch as ReadonlyFetch,
+          },
+          ...payloads,
+        ),
+    };
+  };
+
+export type SingleStateActionContext<S extends StateTree> = {
+  state: DeepReadonly<UnwrapRef<S>>;
+} & ActionContext;
+export type SingleStateActionDefinition<
+  S extends StateTree,
+  Payloads extends unknown[],
+  Ret,
+> = (context: SingleStateActionContext<S>, ...payloads: Payloads) => Ret;
+export const defSingleStateAction =
+  <Id extends string, S extends StateTree>(state: StateStore<Id, S>) =>
+  <Paylodas extends unknown[], Ret>(
+    action: SingleStateActionDefinition<S, Paylodas, Ret>,
+  ): Action<Paylodas, Ret> => {
+    return {
+      [ACTION]: (ctx, ...payloads) =>
+        action(
+          {
+            ...ctx,
+            state: ctx.fetch(state),
+          },
+          ...payloads,
+        ),
+    };
+  };
