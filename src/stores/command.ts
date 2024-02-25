@@ -1,3 +1,3 @@
-import { defineHistory } from './pinia-helper/command-history';
+import { defineHistory } from './pinia-helper';
 
 export const useHistory = defineHistory('history');

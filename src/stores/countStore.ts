@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import {
   defineCommandableStateStore,
   useSingleCommandContext,
-} from './pinia-helper/command-definition';
+} from './pinia-helper';
 
 const CountState = defineCommandableStateStore({
   id: 'count/state',

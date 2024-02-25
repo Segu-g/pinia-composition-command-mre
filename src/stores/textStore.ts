@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import {
   defineCommandableStateStore,
   useSingleCommandContext,
-} from './pinia-helper/command-definition';
+} from './pinia-helper';
 
 export const TextState = defineCommandableStateStore({
   id: 'text/state',
