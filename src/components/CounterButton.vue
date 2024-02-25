@@ -6,7 +6,6 @@ const countStore = useCount();
 const { dispatch, get } = useStateStore();
 const countValue = computed(() => get(countStore.getCount));
 const countUp = () => {
-  console.log(countStore.actIncrement);
   dispatch(countStore.actIncrement);
 };
 </script>
