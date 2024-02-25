@@ -19,7 +19,7 @@ import {
   unwrapMutation,
 } from './interface';
 
-type StateStoreExecContext = {
+export type StateStoreExecContext = {
   fetch: Fetch;
   get: Get;
   dispatch: Dispatch;

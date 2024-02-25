@@ -150,7 +150,7 @@ export type SingleStateGetterDefinition<S extends StateTree, Ret> = (
 export const defSingleStateGetter =
   <Id extends string, S extends StateTree>(state: StateStore<Id, S>) =>
   <Ret>(getter: SingleStateGetterDefinition<S, Ret>): Getter<Ret> => {
-    return { [GETTER]: (ctx) => getter({ ...ctx, state: ctx.fetch(state) }) };
+    return Getter((ctx) => getter({ ...ctx, state: ctx.fetch(state) }));
   };
 
 export type SingleStateMutationContext<S extends StateTree> = {
@@ -169,17 +169,16 @@ export const defSingleStateMutaiton =
   <Paylodas extends unknown[]>(
     mutaiton: SingleStateMutationDefinition<S, Paylodas>,
   ): Mutation<Paylodas> => {
-    return {
-      [MUTATION]: (ctx, ...payloads) =>
-        mutaiton(
-          {
-            ...ctx,
-            state: ctx.fetch(state),
-            fetch: ctx.fetch as ReadonlyFetch,
-          },
-          ...payloads,
-        ),
-    };
+    return Mutation((ctx, ...payloads) =>
+      mutaiton(
+        {
+          ...ctx,
+          state: ctx.fetch(state),
+          fetch: ctx.fetch as ReadonlyFetch,
+        },
+        ...payloads,
+      ),
+    );
   };
 
 export type SingleStateActionContext<S extends StateTree> = {
@@ -195,14 +194,13 @@ export const defSingleStateAction =
   <Paylodas extends unknown[], Ret>(
     action: SingleStateActionDefinition<S, Paylodas, Ret>,
   ): Action<Paylodas, Ret> => {
-    return {
-      [ACTION]: (ctx, ...payloads) =>
-        action(
-          {
-            ...ctx,
-            state: ctx.fetch(state),
-          },
-          ...payloads,
-        ),
-    };
+    return Action((ctx, ...payloads) =>
+      action(
+        {
+          ...ctx,
+          state: ctx.fetch(state),
+        },
+        ...payloads,
+      ),
+    );
   };
